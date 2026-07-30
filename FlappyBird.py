@@ -26,7 +26,10 @@ def test(*args,**kwargs):
     print(args, kwargs,'test')
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+
+def play():
+    global score,temp1,temp2,temp3,temp4,bird_x,bird_y,WIDTH,HEIGHT,AIR,PIPE_AIR_IMAGE,PIPE_IMAGE
 
 
     # 游戏画面
@@ -53,8 +56,8 @@ if __name__ == '__main__':
     # 2.小鸟
 
     # 游戏画面参数计算
-    # while True:
-    for _ in range(2):
+    while True:
+    # for _ in range(2):
 
         # # 按键控制
         # if msvcrt.kbhit():
@@ -141,12 +144,19 @@ if __name__ == '__main__':
                         frames[k][j][i + 1 + 16 * 2] = AIR
                         frames[k][j][i + 2 + 16 * 2] = AIR
 
-        pass
 
         # 游戏画面绘制
         for k in range(len(frames)):
         # if test:
         #     k = 0
+        # 生成小鸟 & 结束
+        # for k in range(len(frames)):
+            frames[k][bird_y][bird_x] = '@'
+            if frames[k][bird_y][bird_x] == PIPE_IMAGE or bird_y == HEIGHT:
+                print('游戏结束')
+                return
+            else:
+                pass
             time.sleep(0.02)
             print('')
             print(information_line)
@@ -156,6 +166,9 @@ if __name__ == '__main__':
                 for i in range(len(frames[k][j])):
                     line_temp = line_temp + frames[k][j][i]#临时字符串换行
                 print(line_temp)
+            bird_y += 1
+            score += 1
+
         # 随机数重置：
         temp1 = temp2
         temp2 = temp3
@@ -167,8 +180,8 @@ if __name__ == '__main__':
         # list_temp4 = []
         # # test
         # break
-
-
+play()
+print(f'游戏结束，你这次的得分是{score}')
 
 
 
