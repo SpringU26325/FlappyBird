@@ -156,6 +156,7 @@ def play():
         list_temp3 = [temp3, temp3 + 1, temp3 - 1]
 
 play()
+print('')
 print(f'游戏结束，你这次的得分是{score}')
 
 
