@@ -14,7 +14,7 @@ PIPE_IMAGE = '#'
 
 #变量
 bird_y = HEIGHT//2
-bird_x = WIDTH//4+1
+bird_x = WIDTH//12
 score = 0
 temp1 = -2
 temp2 = -2
@@ -59,15 +59,7 @@ def play():
     while True:
     # for _ in range(2):
 
-        # # 按键控制
-        # if msvcrt.kbhit():
-        #     key = msvcrt.getch()
-        #     if key == b'\x1b':  # 检测
-        #         break
-        #     elif key == b' ':
-        #         bird_y += 1
-        #     else:
-        #         pass
+
         information_line = f'得分：{score}' + ' ' * 3 + '按esc退出，按space跳跃'
         # time.sleep(0.02)
         frames = [[[AIR for i in range(WIDTH)] for j in range(HEIGHT)] for k in range(int(WIDTH/3))]
@@ -149,37 +141,47 @@ def play():
         for k in range(len(frames)):
         # if test:
         #     k = 0
-        # 生成小鸟 & 结束
+            # 生成小鸟 & 结束
         # for k in range(len(frames)):
-            frames[k][bird_y][bird_x] = '@'
-            if frames[k][bird_y][bird_x] == PIPE_IMAGE or bird_y == HEIGHT:
-                print('游戏结束')
+            if frames[k][bird_y][bird_x] == PIPE_IMAGE or bird_y == (HEIGHT - 1):
                 return
-            else:
-                pass
-            time.sleep(0.02)
+            frames[k][bird_y][bird_x] = '@'
+            time.sleep(0.08)
             print('')
             print(information_line)
             # 字符串拼接
             for j in range(len(frames[k])):
                 line_temp = ''
                 for i in range(len(frames[k][j])):
-                    line_temp = line_temp + frames[k][j][i]#临时字符串换行
+                    line_temp = line_temp + frames[k][j][i]  # 临时字符串换行
                 print(line_temp)
-            bird_y += 1
+
+
+
+
+            # if k % 2 == 1:
+            if k % 4 == 3:# 下降速度
+                bird_y += 1
             score += 1
+            # 按键控制
+            if msvcrt.kbhit():
+                key = msvcrt.getch()
+                if key == b'\x1b':  # 检测
+                    return
+                elif key == b' ':
+                    bird_y -= 1
+                else:
+                    pass
 
         # 随机数重置：
         temp1 = temp2
         temp2 = temp3
         temp3 = temp4
-        # temp4 = -2
+
         list_temp1 = [temp1, temp1 + 1, temp1 - 1]
         list_temp2 = [temp2, temp2 + 1, temp2 - 1]
         list_temp3 = [temp3, temp3 + 1, temp3 - 1]
-        # list_temp4 = []
-        # # test
-        # break
+
 play()
 print(f'游戏结束，你这次的得分是{score}')
 
