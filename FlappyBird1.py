@@ -122,16 +122,20 @@ def play():
                         frames[k][j][i + 2 + WIDTH0 * 2] = AIR
 
         # 游戏画面绘制
+
         for k in range(len(frames)):
         # if test:
         #     k = 0
             # 生成小鸟 & 结束
             information_line = f'得分：{score}' + ' ' * 3 + '按esc退出，按space跳跃' + '小鸟图标：@' + f'管道图标{PIPE_IMAGE}'
+            ceil_line = '-' * WIDTH
+            floor_line = '-' * WIDTH
             if frames[k][bird_y][bird_x] == PIPE_IMAGE or bird_y == (HEIGHT - 1) or bird_y ==0:
                 return
             frames[k][bird_y][bird_x] = '@'
             time.sleep(0.1)
             print('')
+            print(ceil_line)
             print(information_line)
             # 字符串拼接
             for j in range(len(frames[k])):
@@ -139,6 +143,7 @@ def play():
                 for i in range(len(frames[k][j])):
                     line_temp = line_temp + frames[k][j][i]  # 临时字符串换行
                 print(line_temp)
+            print(floor_line)
 
             if k % 4 == 3:# 下降速度
                 bird_y += 1
@@ -180,15 +185,24 @@ print(f'游戏结束，你这次的得分是{score}')
 
 # 结果写入
 play_time = datetime.datetime.now().strftime("%Y/%m/%d %H:%M")
-with open('FlappyBirdrecord.txt',mode = 'w',encoding='utf-8') as f:
-    pass
-with open('FlappyBirdrecord.txt',mode = 'r',encoding='utf-8') as f:
-    with open('FlappyBirdrecord_copy.txt',mode = 'w',encoding='utf-8') as f0:
-        for line in f:
-            f0.write(line)
-        f0.write(f'{user_name}于{play_time}取得了{score}分')
-os.remove('FlappyBirdrecord.txt')
-os.rename('FlappyBirdrecord_copy.txt','FlappyBirdrecord.txt')
+
+def file_input():
+    global user_name, play_time, score
+    with open('FlappyBirdRecord.txt',mode = 'r',encoding='utf-8') as f:
+        with open('FlappyBirdRecord_copy.txt',mode = 'w',encoding='utf-8') as f0:
+            for line in f:
+                f0.write(line)
+                f0.write('\n')
+            f0.write(f'{user_name}于{play_time}取得了{score}分')
+
+try:# 保证有个文件
+    file_input()
+except FileNotFoundError:
+    with open('FlappyBirdRecord.txt', mode='w', encoding='utf-8'):
+        pass
+    file_input()
+os.remove('FlappyBirdRecord.txt')
+os.rename('FlappyBirdRecord_copy.txt','FlappyBirdRecord.txt')
 # SpringU26325
 # python FlappyBird1.py
 
