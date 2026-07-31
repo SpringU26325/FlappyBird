@@ -119,7 +119,7 @@ def play():
         #     k = 0
             # 生成小鸟 & 结束
             information_line = f'得分：{score}' + ' ' * 3 + '按esc退出，按space跳跃'
-            if frames[k][bird_y][bird_x] == PIPE_IMAGE or bird_y == (HEIGHT - 1):
+            if frames[k][bird_y][bird_x] == PIPE_IMAGE or bird_y == (HEIGHT - 1) or bird_y ==0:
                 return
             frames[k][bird_y][bird_x] = '@'
             time.sleep(0.1)
