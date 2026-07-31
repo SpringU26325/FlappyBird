@@ -1,8 +1,14 @@
 
+
 # 导入模块
 import time
 import msvcrt
 import random
+import math
+import datetime
+import os
+
+
 
 #常量
 WIDTH = 96
@@ -12,6 +18,8 @@ AIR = ' '#正式
 # AIR = 'H'#测试
 PIPE_IMAGE = '#'
 
+# 加载
+print(math.ceil((WIDTH-5)/2)*'-' + '正在初始化' + math.floor((WIDTH-5)/2)*'-')
 #变量
 bird_y = HEIGHT//2
 bird_x = 1# WIDTH//12
@@ -118,7 +126,7 @@ def play():
         # if test:
         #     k = 0
             # 生成小鸟 & 结束
-            information_line = f'得分：{score}' + ' ' * 3 + '按esc退出，按space跳跃'
+            information_line = f'得分：{score}' + ' ' * 3 + '按esc退出，按space跳跃' + '小鸟图标：@' + f'管道图标{PIPE_IMAGE}'
             if frames[k][bird_y][bird_x] == PIPE_IMAGE or bird_y == (HEIGHT - 1) or bird_y ==0:
                 return
             frames[k][bird_y][bird_x] = '@'
@@ -154,13 +162,35 @@ def play():
         list_temp1 = [temp1, temp1 + 1, temp1 - 1]
         list_temp2 = [temp2, temp2 + 1, temp2 - 1]
         list_temp3 = [temp3, temp3 + 1, temp3 - 1]
+print(math.ceil((WIDTH-5)/2)*'-' + '初始化完成' + math.floor((WIDTH-5)/2)*'-')
+user_name = input('账号：')
+
+# 倒计时
+time.sleep(1)
+print('3')
+time.sleep(1)
+print('2')
+time.sleep(1)
+print('1')
 
 play()
+
 print('')
 print(f'游戏结束，你这次的得分是{score}')
 
-
-
+# 结果写入
+play_time = datetime.datetime.now().strftime("%Y/%m/%d %H:%M")
+with open('FlappyBirdrecord.txt',mode = 'w',encoding='utf-8') as f:
+    pass
+with open('FlappyBirdrecord.txt',mode = 'r',encoding='utf-8') as f:
+    with open('FlappyBirdrecord_copy.txt',mode = 'w',encoding='utf-8') as f0:
+        for line in f:
+            f0.write(line)
+        f0.write(f'{user_name}于{play_time}取得了{score}分')
+os.remove('FlappyBirdrecord.txt')
+os.rename('FlappyBirdrecord_copy.txt','FlappyBirdrecord.txt')
+# SpringU26325
+# python FlappyBird1.py
 
 
 
