@@ -127,7 +127,7 @@ def play():
         # if test:
         #     k = 0
             # 生成小鸟 & 结束
-            information_line = f'得分：{score}' + ' ' * 3 + '按esc退出，按space跳跃' + '小鸟图标：@' + f'管道图标{PIPE_IMAGE}'
+            information_line = f'得分：{score}' + ' ' * 3 + '按esc退出，按space跳跃' + ' '*3 + '小鸟图标：@' +' '*3+ f'管道图标{PIPE_IMAGE}'
             ceil_line = '-' * WIDTH
             floor_line = '-' * WIDTH
             if frames[k][bird_y][bird_x] == PIPE_IMAGE or bird_y == (HEIGHT - 1) or bird_y ==0:
