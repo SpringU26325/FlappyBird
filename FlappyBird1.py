@@ -34,6 +34,7 @@ flag = True
 def test(*args,**kwargs):
     print(args, kwargs,'test')
 
+# 游戏进程
 def play():
     global score,temp1,temp2,temp3,temp4,bird_x,bird_y,WIDTH,HEIGHT,AIR,PIPE_IMAGE,flag# 变量引入
 
@@ -47,6 +48,16 @@ def play():
     list_temp2 = [temp2, temp2 + 1, temp2 - 1]
     list_temp3 = [temp3, temp3 + 1, temp3 - 1]
 
+# 初始化
+def reset_game():
+    global bird_x,bird_y,score,temp1,temp2,temp3,temp4
+    bird_y = HEIGHT // 2
+    bird_x = 1  # WIDTH//12
+    score = 0
+    temp1 = -2
+    temp2 = -2
+    temp3 = -2
+    temp4 = -2
     # 2.小鸟
     # 游戏画面参数计算
     gc.disable()# 禁用无意义的垃圾回收
@@ -211,24 +222,12 @@ while 1:
 
         user_input = input('按Q退出，按R重新开始，按L切换账号')
         if user_input.upper() == 'R':
-            bird_y = HEIGHT // 2
-            bird_x = 1  # WIDTH//12
-            score = 0
-            temp1 = -2
-            temp2 = -2
-            temp3 = -2
-            temp4 = -2
+            reset_game()
         elif user_input.upper() == 'Q':
             flag = False
         elif user_input.upper() == 'L':
-            bird_y = HEIGHT // 2
-            bird_x = 1  # WIDTH//12
-            score = 0
-            temp1 = -2
-            temp2 = -2
-            temp3 = -2
-            temp4 = -2
-            break
+            reset_game()
+            flag = False
 
 
 # python FlappyBird1.py
