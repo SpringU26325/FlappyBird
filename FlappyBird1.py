@@ -7,7 +7,7 @@ import random
 import math
 import datetime
 import os
-
+import gc
 
 
 #常量
@@ -35,8 +35,7 @@ def test(*args,**kwargs):
     print(args, kwargs,'test')
 
 def play():
-    # 变量引入
-    global score,temp1,temp2,temp3,temp4,bird_x,bird_y,WIDTH,HEIGHT,AIR,PIPE_IMAGE,flag
+    global score,temp1,temp2,temp3,temp4,bird_x,bird_y,WIDTH,HEIGHT,AIR,PIPE_IMAGE,flag# 变量引入
 
     # 1.管道随机数
     def random_pipe():# 生成一个大致位于中间的数
@@ -50,6 +49,7 @@ def play():
 
     # 2.小鸟
     # 游戏画面参数计算
+    gc.disable()# 禁用无意义的垃圾回收
     while True:
         frames = [[[AIR for i in range(WIDTH)] for j in range(HEIGHT)] for k in range(WIDTH0)]
         # 内层 i 列表推导式生成每一行的48字符，中层 j 生成15行，最外层 k 生成16个循环帧
@@ -169,60 +169,66 @@ def play():
         list_temp2 = [temp2, temp2 + 1, temp2 - 1]
         list_temp3 = [temp3, temp3 + 1, temp3 - 1]
 print(math.ceil((WIDTH-5)/2)*'-' + '初始化完成' + math.floor((WIDTH-5)/2)*'-')
-user_name = input('账号：')
 
+while 1:
+    user_name = input('账号：')
+    while flag :
+    # if 1:
+        # 游戏进程
+        # 倒计时，供玩家准备
+        time.sleep(1)
+        print('3')
+        time.sleep(1)
+        print('2')
+        time.sleep(1)
+        print('1')
+        # 游戏函数
+        play()
+        # 结算
+        print('')
+        print(f'游戏结束，你这次的得分是{score}')
 
-while flag :
-# if 1:
-    # 游戏进程
-    # 倒计时，供玩家准备
-    time.sleep(1)
-    print('3')
-    time.sleep(1)
-    print('2')
-    time.sleep(1)
-    print('1')
-    # 游戏函数
-    play()
-    # 结算
-    print('')
-    print(f'游戏结束，你这次的得分是{score}')
+        # 结果写入
+        play_time = datetime.datetime.now().strftime("%Y/%m/%d %H:%M")
 
-    # 结果写入
-    play_time = datetime.datetime.now().strftime("%Y/%m/%d %H:%M")
+        def file_input():
+            global user_name, play_time, score
+            with open('FlappyBirdRecord.txt',mode = 'r',encoding='utf-8') as f:
+                with open('FlappyBirdRecord_copy.txt',mode = 'w',encoding='utf-8') as f0:
+                    for line in f:
+                        f0.write(line)
+                        f0.write('\n')
+                    f0.write(f'{user_name}于{play_time}取得了{score}分')
 
-    def file_input():
-        global user_name, play_time, score
-        with open('FlappyBirdRecord.txt',mode = 'r',encoding='utf-8') as f:
-            with open('FlappyBirdRecord_copy.txt',mode = 'w',encoding='utf-8') as f0:
-                for line in f:
-                    f0.write(line)
-                    f0.write('\n')
-                f0.write(f'{user_name}于{play_time}取得了{score}分')
+        try:# 保证有个文件
+            file_input()
+        except FileNotFoundError:
+            with open('FlappyBirdRecord.txt', mode='w', encoding='utf-8'):
+                pass
+            file_input()
+        os.remove('FlappyBirdRecord.txt')
+        os.rename('FlappyBirdRecord_copy.txt','FlappyBirdRecord.txt')
 
-    try:# 保证有个文件
-        file_input()
-    except FileNotFoundError:
-        with open('FlappyBirdRecord.txt', mode='w', encoding='utf-8'):
-            pass
-        file_input()
-    os.remove('FlappyBirdRecord.txt')
-    os.rename('FlappyBirdRecord_copy.txt','FlappyBirdRecord.txt')
-
-    user_input = input('按Q退出，按R重新开始')
-    if user_input.upper == 'R':
-        bird_y = HEIGHT // 2
-        bird_x = 1  # WIDTH//12
-        score = 0
-        temp1 = -2
-        temp2 = -2
-        temp3 = -2
-        temp4 = -2
-    elif user_input.upper == 'Q':
-        test()
-        flag = False
-        break
-
+        user_input = input('按Q退出，按R重新开始，按L切换账号')
+        if user_input.upper() == 'R':
+            bird_y = HEIGHT // 2
+            bird_x = 1  # WIDTH//12
+            score = 0
+            temp1 = -2
+            temp2 = -2
+            temp3 = -2
+            temp4 = -2
+        elif user_input.upper() == 'Q':
+            flag = False
+        elif user_input.upper() == 'L':
+            bird_y = HEIGHT // 2
+            bird_x = 1  # WIDTH//12
+            score = 0
+            temp1 = -2
+            temp2 = -2
+            temp3 = -2
+            temp4 = -2
+            break
 
 
 # python FlappyBird1.py
