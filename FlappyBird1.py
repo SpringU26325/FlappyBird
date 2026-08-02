@@ -28,25 +28,8 @@ temp1 = -2
 temp2 = -2
 temp3 = -2
 temp4 = -2
-flag = True
-
-# 测试函数
-def test(*args,**kwargs):
-    print(args, kwargs,'test')
-
-# 游戏进程
-def play():
-    global score,temp1,temp2,temp3,temp4,bird_x,bird_y,WIDTH,HEIGHT,AIR,PIPE_IMAGE,flag# 变量引入
-
-    # 1.管道随机数
-    def random_pipe():# 生成一个大致位于中间的数
-        return random.randint(HEIGHT // 5, HEIGHT - HEIGHT // 5)
-    temp1 = random_pipe()
-    temp2 = random_pipe()
-    temp3 = random_pipe()
-    list_temp1 = [temp1, temp1 + 1, temp1 - 1]  # TEST:[5,4,3]
-    list_temp2 = [temp2, temp2 + 1, temp2 - 1]
-    list_temp3 = [temp3, temp3 + 1, temp3 - 1]
+flag_playing = True
+flag_user_name = True
 
 # 初始化
 def reset_game():
@@ -58,6 +41,25 @@ def reset_game():
     temp2 = -2
     temp3 = -2
     temp4 = -2
+# 测试函数
+def test(*args,**kwargs):
+    print(args, kwargs,'test')
+
+# 游戏进程
+def play():
+    global score,temp1,temp2,temp3,temp4,bird_x,bird_y,WIDTH,HEIGHT,AIR,PIPE_IMAGE,flag_user_name# 变量引入
+
+    # 1.管道随机数
+    def random_pipe():# 生成一个大致位于中间的数
+        return random.randint(HEIGHT // 5, HEIGHT - HEIGHT // 5)
+    temp1 = random_pipe()
+    temp2 = random_pipe()
+    temp3 = random_pipe()
+    list_temp1 = [temp1, temp1 + 1, temp1 - 1]  # TEST:[5,4,3]
+    list_temp2 = [temp2, temp2 + 1, temp2 - 1]
+    list_temp3 = [temp3, temp3 + 1, temp3 - 1]
+
+
     # 2.小鸟
     # 游戏画面参数计算
     gc.disable()# 禁用无意义的垃圾回收
@@ -138,6 +140,7 @@ def reset_game():
         # if test:
         #     k = 0
             # 生成小鸟 & 结束
+            # print('\033[H', end='')
             information_line = f'{user_name}得分：{score}' + ' ' * 3 + '按esc退出，按space跳跃' + ' '*3 + '小鸟图标：@' +' '*3+ f'管道图标{PIPE_IMAGE}'
             ceil_line = '-' * WIDTH
             floor_line = '-' * WIDTH
@@ -164,7 +167,7 @@ def reset_game():
             if msvcrt.kbhit():
                 key = msvcrt.getch()
                 if key == b'\x1b':  # 检测
-                    flag = False
+                    flag_user_name = False
                     return
                 elif key == b' ':
                     bird_y -= 1
@@ -181,9 +184,9 @@ def reset_game():
         list_temp3 = [temp3, temp3 + 1, temp3 - 1]
 print(math.ceil((WIDTH-5)/2)*'-' + '初始化完成' + math.floor((WIDTH-5)/2)*'-')
 
-while 1:
+while flag_playing:
     user_name = input('账号：')
-    while flag :
+    while flag_user_name :
     # if 1:
         # 游戏进程
         # 倒计时，供玩家准备
@@ -224,10 +227,11 @@ while 1:
         if user_input.upper() == 'R':
             reset_game()
         elif user_input.upper() == 'Q':
-            flag = False
+            flag_user_name = False
+            flag_playing = False
         elif user_input.upper() == 'L':
             reset_game()
-            flag = False
+            flag_user_name = False
 
 
 # python FlappyBird1.py
