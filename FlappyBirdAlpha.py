@@ -234,11 +234,9 @@ while flag_playing:
             flag_user_name = False
 
 
-# python FlappyBird1.py
+# python FlappyBirdAlpha.py
 # SpringU26325
-# 304960459
-# 自律自强
-# 456
+
 
 
 
