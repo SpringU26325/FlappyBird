@@ -75,10 +75,19 @@ def ui_frame(tip_input):
     # 中间提示
     ui_frame[HEIGHT // 2] = blank_line[:WIDTH // 2 - len(game_over_tip) // 2] + \
     game_over_tip +blank_line[WIDTH // 2 - len(game_over_tip) // 2 + len(game_over_tip):]
-    # 打印结束页面
+
+    # 打印UI页面
     for ui_frame_index in range(len(ui_frame)):
         ui_frame_temp = ui_frame_temp + ui_frame[ui_frame_index]
     print(ui_frame_temp)
+
+# 让用户看得更清晰
+def see_clear(fn):
+    def inner():
+        time.sleep(2)
+        fn()
+        time.sleep(2)
+    return inner
 # 游戏
 def play():
     game_flag = True
@@ -148,6 +157,9 @@ def play():
                 pipes[i].x -= 1
             if bird1.y == HEIGHT - 1 or bird1.y == 0:
                 game_flag = False
+                time.sleep(2)
+                ui_frame(f'GAME OVER !Your score : {bird1.score}')
+                time.sleep(2)
                 return
             if counter.count %4 == 3:
                 bird1.fall()
@@ -202,8 +214,9 @@ def play():
 
             # 按ESC结束
             elif key == b'\x1b':
-                game_over_tip = f'GAME OVER !Your score : {bird1.score}'
-                ui_frame(game_over_tip)
+                time.sleep(2)
+                ui_frame(f'GAME OVER !Your score : {bird1.score}')
+                time.sleep(2)
                 break
 
             elif key == b't' or key == b'T':
@@ -213,8 +226,13 @@ def play():
         frames = calculate_frame_parameters()[0]
         # 画面打印
         render_frame(frames)
+        if game_flag == False:  # 游戏状态为False打印结束画面
+            time.sleep(2)
+            ui_frame(f'GAME OVER !Your score : {bird1.score}')
+            time.sleep(2)
         # 下一轮游戏参数计算
-        calculate_game_parameters()
+        elif game_flag == True:
+            calculate_game_parameters()
 
 if __name__ == '__main__':
     user_name, user_login_flag =user_login()
