@@ -85,16 +85,25 @@ def score_record(player, score, play_time):
     try:
         with open('FlappyBirdRecord.txt', mode='r', encoding='utf-8') as f:
             data_temp = json.load(f)
-        data_temp[player].append([score, play_time])
+        data_temp[player].append((score, play_time))
     except FileNotFoundError:
-        data_temp = {player: [[score, play_time]]}
+        data_temp = {player: [(score, play_time)]}
     data_temp_json = json.dumps(data_temp)
     with open('FlappyBirdRecord.txt', mode='w', encoding='utf-8') as f:
         f.write(data_temp_json)
 
-
+def best_score_and_time_output():
+    try:
+        with open('FlappyBirdRecord.txt', mode='r', encoding='utf-8') as f:
+            dict_temp = json.load(f)
+            player_score_and_time_list = dict_temp[user_name]
+            player_best_record = max(player_score_and_time_list, key = lambda x: x[0])
+            return player_best_record
+    except FileNotFoundError:
+        return 0, '???'
 # 游戏
 def play():
+    best_score, best_score_play_time = best_score_and_time_output()
     game_flag = True
     pipes = [Pipe((WIDTH0 * k) - 2, random.randint(HEIGHT // 5, HEIGHT - HEIGHT // 5)) for k in range(4)]
     while game_flag:
@@ -109,7 +118,8 @@ def play():
             bird1.score += 1
 
         # 画面
-        information = [f'{user_name}当前得分{bird1.score}', '按esc退出','按P暂停']
+        information = [f'{user_name}当前得分{bird1.score}', f'于{best_score_play_time}取得历史最高分{best_score}',
+                       '按esc退出', '按P暂停']
         separator = '---'
         separate_line = '-' * WIDTH
         information_line = separator
@@ -144,6 +154,7 @@ def play():
             return frames, pause_frame
 
         def render_frame(frame_input):
+            print('\033[H', end='')
             # 打印画面
             frame = separate_line + '\n' + information_line + '\n'
             for j in range(len(frame_input)):
@@ -233,6 +244,7 @@ def play():
         render_frame(frames)
         if game_flag == False:  # 游戏状态为False打印结束画面
             time.sleep(2)
+            print('\033[H', end='')
             ui_frame(f'GAME OVER !Your score : {bird1.score}')
             time.sleep(2)
         # 下一轮游戏参数计算
@@ -243,6 +255,7 @@ if __name__ == '__main__':
     user_name, user_login_flag =user_login()
     while user_login_flag:
         time.sleep(1)
+        print('\033[H', end='')
         ui_frame('按S以开始，按ESC以结束')
         if msvcrt.kbhit():
             key = msvcrt.getch()
