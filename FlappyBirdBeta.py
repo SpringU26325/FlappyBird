@@ -10,10 +10,9 @@ import msvcrt
 import random
 import sys
 import copy
-# import math
-# import datetime
+import datetime
 # import os
-# import gc
+import json
 
 # 常量
 WIDTH = 96
@@ -81,13 +80,19 @@ def ui_frame(tip_input):
         ui_frame_temp = ui_frame_temp + ui_frame[ui_frame_index]
     print(ui_frame_temp)
 
-# 让用户看得更清晰
-def see_clear(fn):
-    def inner():
-        time.sleep(2)
-        fn()
-        time.sleep(2)
-    return inner
+# 结果记录
+def score_record(player, score, play_time):
+    try:
+        with open('FlappyBirdRecord.txt', mode='r', encoding='utf-8') as f:
+            data_temp = json.load(f)
+        data_temp[player].append([score, play_time])
+    except FileNotFoundError:
+        data_temp = {player: [[score, play_time]]}
+    data_temp_json = json.dumps(data_temp)
+    with open('FlappyBirdRecord.txt', mode='w', encoding='utf-8') as f:
+        f.write(data_temp_json)
+
+
 # 游戏
 def play():
     game_flag = True
@@ -243,5 +248,9 @@ if __name__ == '__main__':
             key = msvcrt.getch()
             if key.lower() == b's':
                 play()
+                play_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                score_record(user_name, bird1.score, play_time)
+
             elif key == b'\x1b':
                 sys.exit(0)
+
