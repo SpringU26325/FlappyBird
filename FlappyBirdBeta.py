@@ -19,7 +19,6 @@ WIDTH = 96
 WIDTH0 = WIDTH//3
 HEIGHT = 15
 AIR = ' '#正式
-# AIR = 'H'#测试
 PIPE_IMAGE = '#'
 
 # 鸟
@@ -27,7 +26,6 @@ class Bird:
     def __init__(self):
         self.image = '\033[31m@\033[0m'
         self.y = HEIGHT // 2
-        # self.y = 0  # TEST
         self.score = 0
         self.x = 1
     def fall(self):
@@ -74,7 +72,6 @@ def ui_frame(tip_input):
     # 中间提示
     ui_frame[HEIGHT // 2] = blank_line[:WIDTH // 2 - len(game_over_tip) // 2] + \
     game_over_tip +blank_line[WIDTH // 2 - len(game_over_tip) // 2 + len(game_over_tip):]
-
     # 打印UI页面
     for ui_frame_index in range(len(ui_frame)):
         ui_frame_temp = ui_frame_temp + ui_frame[ui_frame_index]
@@ -83,7 +80,7 @@ def ui_frame(tip_input):
 # 结果记录
 def score_record(player, score, play_time):
     try:
-        with open('FlappyBirdRecord.txt', mode='r', encoding='utf-8') as f:
+        with open('FlappyBirdRecord.json', mode='r', encoding='utf-8') as f:
             data_temp = json.load(f)
         try:
             data_temp[player].append((score, play_time))
@@ -92,12 +89,12 @@ def score_record(player, score, play_time):
     except FileNotFoundError:
         data_temp = {player: [(score, play_time)]}
     data_temp_json = json.dumps(data_temp)
-    with open('FlappyBirdRecord.txt', mode='w', encoding='utf-8') as f:
+    with open('FlappyBirdRecord.json', mode='w', encoding='utf-8') as f:
         f.write(data_temp_json)
 
-def best_score_and_time_output():
+def best_score_and_time_output(user_name):
     try:
-        with open('FlappyBirdRecord.txt', mode='r', encoding='utf-8') as f:
+        with open('FlappyBirdRecord.json', mode='r', encoding='utf-8') as f:
             dict_temp = json.load(f)
             player_score_and_time_list = dict_temp[user_name]
             player_best_record = max(player_score_and_time_list, key = lambda x: x[0])
@@ -108,7 +105,7 @@ def best_score_and_time_output():
 def play(user_name):
     bird1 = Bird()
     counter = CallCounter()
-    best_score, best_score_play_time = best_score_and_time_output()
+    best_score, best_score_play_time = best_score_and_time_output(user_name)
     game_flag = True
     pipes = [Pipe((WIDTH0 * k) - 2, random.randint(HEIGHT // 5, HEIGHT - HEIGHT // 5)) for k in range(4)]
 
@@ -123,6 +120,7 @@ def play(user_name):
                     if i == pipes[k].x or i == pipes[k].x - 1 or i == pipes[k].x + 1:
                         if not ((j == pipes[k].y) or (j == pipes[k].y - 1) or (j == pipes[k].y + 1)):
                             frames[j][i] = PIPE_IMAGE
+
 
         # 管道碰撞检测
         if frames[bird1.y][bird1.x] == PIPE_IMAGE:
@@ -183,7 +181,6 @@ def play(user_name):
         information_line = separator
         for information_line_index in range(len(information)):
             information_line = information_line + information[information_line_index] + separator
-
 
 
         # 按键监听
@@ -250,7 +247,6 @@ def play(user_name):
         render_frame(frames, information_line, separate_line)
         if game_flag == False:  # 游戏状态为False打印结束画面
             time.sleep(2)
-            # print('\033[H', end='')
             print('\033[2J\033[3J\033[H', end='')
             ui_frame(f'GAME OVER !Your score : {bird1.score}')
             time.sleep(2)
@@ -258,13 +254,13 @@ def play(user_name):
         elif game_flag == True:
             calculate_game_parameters()
     return bird1, counter
-if __name__ == '__main__':
+
+def main():
     game_start_flag = True
     while game_start_flag:
         user_name, user_login_flag =user_login()
         while user_login_flag:
             time.sleep(0.05)
-            # print('\033[H', end='')
             print('\033[2J\033[3J\033[H', end='')
             ui_frame('按S以开始，按ESC以结束，按C切换账号')
             if msvcrt.kbhit():
@@ -286,3 +282,5 @@ if __name__ == '__main__':
 # 测试：demo
 # SpringU26325
 # 304960459
+if __name__ == '__main__':
+    main()
