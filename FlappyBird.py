@@ -302,7 +302,7 @@ class Game:
                     f'于{player1_best_score_play_time}取得历史最高分{player1_best_score}',
                     f'{player_name_tuple[1]}当前得分{self.bird2.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player2_best_score}',
-                    '[esc] 退出  [P] 暂停 [space] 跳跃']
+                    '[esc] 退出  [P] 暂停 玩家1：[space] 跳跃；玩家2 [0] 跳跃']
         info_line_output = '\n'.join(info)
         return info_line_output
 
@@ -312,7 +312,7 @@ class Game:
         while self.pause_flag:
             for dot_num in range(1, self.dot_count + 1):
                 time.sleep(1)
-                test(dot_num)
+                # test(dot_num)
                 self.calculate_pause_frame(pause_frame, dot_num)
                 self.render_frame(pause_frame, info_line)
                 if msvcrt.kbhit():
@@ -350,13 +350,6 @@ class Game:
 
                 # 按ESC结束
                 elif key == b'\x1b':
-                    # time.sleep(2)
-                    # print('\033[2J\033[3J\033[H', end='')
-                    # if player_num_flag == 1:
-                    #     ui_frame(f'GAME OVER !Your score ：{player_name_tuple[0]} ： {self.bird1.score}')
-                    # elif player_num_flag == 2:
-                    #     ui_frame(f'GAME OVER !Your score ： {player_name_tuple[1]} ：{self.bird2.score}')
-                    # time.sleep(2)
                     self.game_running_flag = False
                     break
                 # 测试：按T结束程序
@@ -419,16 +412,17 @@ def main():
         while user_login_flag:
             clear_key_buffer()
             ui_frame('按S以开始，按ESC以退出游戏，按C切换账号')
-            key = get_key()[0]
-            if key.lower() == b's':  # 按S以开始
-                game = Game(player_num_flag)  # 创建一局游戏
-                players_record = game.run_game(player_num_flag, player_name_tuple, best_record)  # 运行游戏并返回结果
-                score_record(player_name_tuple, players_record, player_num_flag)  # 结果写入
-            elif key.lower() == b'\x1b':  # 按ESC以退出游戏
-                sys.exit(0)
-            elif key.lower() == b'c':  # 按C切换账号
-                user_login_flag = False
-                print('\033[2J\033[3J\033[H', end='')
+            while 1:
+                key = get_key()[0]
+                if key.lower() == b's':  # 按S以开始
+                    game = Game(player_num_flag)  # 创建一局游戏
+                    players_record = game.run_game(player_num_flag, player_name_tuple, best_record)  # 运行游戏并返回结果
+                    score_record(player_name_tuple, players_record, player_num_flag)  # 结果写入
+                elif key.lower() == b'\x1b':  # 按ESC以退出游戏
+                    sys.exit(0)
+                elif key.lower() == b'c':  # 按C切换账号
+                    user_login_flag = False
+                    print('\033[2J\033[3J\033[H', end='')
 
 
 if __name__ == '__main__':
