@@ -97,7 +97,7 @@ def score_record(player_name_tuple, players_record, player_num_flag):
     # 新数据合并至旧数据
     play_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     if player_num_flag == 1:
-        player1_score = players_record
+        player1_score = players_record[0]
     elif player_num_flag == 2:
         player1_score, player2_score = players_record
 
@@ -165,8 +165,6 @@ class Bird:
     def check_death_status(self, frames):
         if frames[self.y][self.x] == PIPE_IMAGE or self.y == HEIGHT - 1 or self.y == 0:
             self.death = True
-        else:
-            self.death = False
 
 
 # 水管
