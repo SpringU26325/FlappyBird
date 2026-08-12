@@ -6,6 +6,16 @@ AIR = ' '
 PIPE_IMAGE = '#'
 
 
+# 导入模块
+import time
+import msvcrt
+import random
+import sys
+import copy
+import datetime
+import json
+
+
 # 测试函数
 def test(*args, **kwargs):
     print(args, kwargs, 'test')
@@ -90,6 +100,7 @@ def score_record(player_name_tuple, players_record, player_num_flag):
         player1_score = players_record
     elif player_num_flag == 2:
         player1_score, player2_score = players_record
+
     try:  # 防止文件不存在
         try:
             with open('FlappyBirdRecord.json', mode='r', encoding='utf-8') as f:
@@ -117,14 +128,23 @@ def score_record(player_name_tuple, players_record, player_num_flag):
         f.write(data_temp_json)
 
 
-# 导入模块
-import time
-import msvcrt
-import random
-import sys
-import copy
-import datetime
-import json
+def get_key():  # 用于检测单个必须按键
+    key = msvcrt.getch()
+    return [key]
+
+
+def poll_keys():
+    keys = []
+    while msvcrt.kbhit():
+        key = msvcrt.getch()
+        keys.append(key)
+    return keys
+
+
+def clear_key_buffer():
+    """清空键盘缓冲区中所有遗留的按键"""
+    while msvcrt.kbhit():
+        msvcrt.getch()
 
 
 # 鸟
@@ -147,7 +167,6 @@ class Bird:
             self.death = True
         else:
             self.death = False
-        return self.death
 
 
 # 水管
@@ -187,9 +206,11 @@ class Game:
         self.game_running_flag = True
         self.pause_flag = False
         self.bird1 = Bird()
-        self.bird2 = Bird() if player_num_flag == 2 else None
+        if player_num_flag == 2:
+            self.bird2 = Bird()
+            self.bird2.image = '@'  # 测试用
         self.counter = CallCounter()
-        self.dot_count = 6
+        self.dot_count = 5
         self.pipes_manager = PipeManager()
 
     def calculate_frame_parameters(self, player_num_flag):
@@ -204,17 +225,16 @@ class Game:
                         if not ((j == self.pipes_manager.pipes[k].y) or (j == self.pipes_manager.pipes[k].y - 1) or (
                                 j == self.pipes_manager.pipes[k].y + 1)):
                             frames[j][i] = PIPE_IMAGE
-        # 插入：游戏结束检测
+        # 插入：小鸟死亡检测检测
+        self.bird1.check_death_status(frames)
         if player_num_flag == 2:
-            if self.bird1.check_death_status(frames) and self.bird2.check_death_status(frames):
-                self.game_running_flag = False
-        elif player_num_flag == 1:
-            if self.bird1.check_death_status(frames):
-                self.game_running_flag = False
+            self.bird2.check_death_status(frames)
         # 画小鸟
-        frames[self.bird1.y][self.bird1.x] = self.bird1.image  # 画小鸟
+        if not self.bird1.death:
+            frames[self.bird1.y][self.bird1.x] = self.bird1.image  # 画小鸟
         if player_num_flag == 2:
-            frames[self.bird2.y][self.bird2.x] = self.bird2.image
+            if not self.bird2.death:
+                frames[self.bird2.y][self.bird2.x] = self.bird2.image
         # 画暂停画面
         pause_frame = copy.deepcopy(frames)
         # H包裹
@@ -258,129 +278,162 @@ class Game:
         # 计算本次参数
         self.counter.execute()  # 计时参数+1
         self.pipes_manager.update_pipes()
-        # 游戏结束判断（上一次画面渲染之后）
-        if self.game_running_flag == False:
-            time.sleep(2)
-            print('\033[2J\033[3J\033[H', end='')
-            if player_num_flag == 2:
-                ui_frame(f'GAME OVER !Your score :{player_name_tuple[0]}:{self.bird1.score}---{player_name_tuple[1]}:{self.bird2.score}')
-            elif player_num_flag == 1:
-                ui_frame(f'GAME OVER !Your score : {player_name_tuple[0]}:{self.bird1.score}')
-            time.sleep(2)
-            return
         if self.counter.count % 4 == 3:
-            self.bird1.fall()
+            if not self.bird1.death:
+                self.bird1.fall()
             if player_num_flag == 2:
-                self.bird2.fall()
+                if not self.bird2.death:
+                    self.bird2.fall()
         # 计数器：管道参数和小鸟分数
         if self.counter.count == WIDTH0 - 1:
-            self.bird1.score += 1
+            if not self.bird1.death:
+                self.bird1.score += 1
             if player_num_flag == 2:
-                self.bird2.score += 1
+                if not self.bird2.death:
+                    self.bird2.score += 1
         # info
         if player_num_flag == 1:
             player1_best_score, player1_best_score_play_time = best_record[0]
             info = [f'{player_name_tuple[0]}当前得分{self.bird1.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player1_best_score}',
-                    '[esc] 退出  [P] 退出 [space] 跳跃']
+                    '[esc] 退出  [P] 暂停 [space] 跳跃']
         elif player_num_flag == 2:
             player1_best_score, player1_best_score_play_time = best_record[0]
             player2_best_score, player2_best_score_play_time = best_record[1]
             info = [f'{player_name_tuple[0]}当前得分{self.bird1.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player1_best_score}',
-                    f'{player_name_tuple[1]}当前得分{self.bird1.score}',
+                    f'{player_name_tuple[1]}当前得分{self.bird2.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player2_best_score}',
-                    '[esc] 退出  [P] 退出 [space] 跳跃']
+                    '[esc] 退出  [P] 暂停 [space] 跳跃']
         info_line_output = '\n'.join(info)
         return info_line_output
 
-    def poll_keys(self, player_num_flag, player_name_tuple, info_line):
-        # 按键监听
-        # 创建keys列表存放按键
-        keys = []
-        while msvcrt.kbhit():
-            key = msvcrt.getch()
-            keys.append(key)
+    def handle_pause_frame(self, player_num_flag, info_line):
+        pause_frame = self.calculate_frame_parameters(player_num_flag)[1]
+        # 卡入循环
+        while self.pause_flag:
+            for dot_num in range(1, self.dot_count + 1):
+                time.sleep(1)
+                test(dot_num)
+                self.calculate_pause_frame(pause_frame, dot_num)
+                self.render_frame(pause_frame, info_line)
+                if msvcrt.kbhit():
+                    key = get_key()[0]
+                    if key == b'\x1b':
+                        self.game_running_flag = False
+                        self.pause_flag = False
+                        break
+
+                    elif key == b'c' or key == b'C':
+                        self.pause_flag = False
+                        break
+                    # 测试
+                    elif key == b't' or key == b'T':
+                        sys.exit(0)
+
+    def react_keys(self, keys_input, player_num_flag, player_name_tuple, info_line):
         # 逐一操作按键
-        for key in keys:
-            # 按P暂停
-            if key == b'p' or key == b'P':
-                self.pause_flag = True
-                pause_frame = self.calculate_frame_parameters(player_num_flag)[1]
-                # 卡入循环
-                while self.pause_flag:
-                    for dot_num in range(1, self.dot_count + 1):
-                        time.sleep(1)
-                        self.calculate_pause_frame(pause_frame, dot_num)
-                        self.render_frame(pause_frame, info_line)
-                        if msvcrt.kbhit():
-                            key = msvcrt.getch()
-                            if key == b'\x1b':
-                                self.game_running_flag = False
-                                self.pause_flag = False
-                                break
+        for key in keys_input:
+            # 游戏进程中监听
+            if self.game_running_flag and not self.pause_flag:
+                # 按P暂停
+                if key.lower() == b'p':
+                    self.pause_flag = True
 
-                            elif key == b'c' or key == b'C':
-                                self.pause_flag = False
-                                break
+                # 按空格、0跳跃
+                elif key == b' ':
+                    self.bird1.rise()
 
-                            elif key == b't' or key == b'T':
-                                sys.exit(0)
+                elif key == b'0':
+                    try:
+                        self.bird2.rise()
+                    except NameError:
+                        pass
 
-            # 按空格、0跳跃
-            elif key == b' ':
-                self.bird1.rise()
-            elif key == b'0':
-                try:
-                    self.bird2.rise()
-                except NameError:
-                    pass
-            # 按ESC结束
-            elif key == b'\x1b':
-                time.sleep(2)
-                print('\033[2J\033[3J\033[H', end='')
-                if player_num_flag == 1:
-                    ui_frame(f'GAME OVER !Your score ：{player_name_tuple[0]} ： {self.bird1.score}')
-                elif player_num_flag == 2:
-                    ui_frame(f'GAME OVER !Your score ： {player_name_tuple[1]} ：{self.bird2.score}')
-                time.sleep(2)
-                break
-            # 测试：按T结束程序
-            elif key == b't' or key == b'T':
-                sys.exit(0)
+                # 按ESC结束
+                elif key == b'\x1b':
+                    # time.sleep(2)
+                    # print('\033[2J\033[3J\033[H', end='')
+                    # if player_num_flag == 1:
+                    #     ui_frame(f'GAME OVER !Your score ：{player_name_tuple[0]} ： {self.bird1.score}')
+                    # elif player_num_flag == 2:
+                    #     ui_frame(f'GAME OVER !Your score ： {player_name_tuple[1]} ：{self.bird2.score}')
+                    # time.sleep(2)
+                    self.game_running_flag = False
+                    break
+                # 测试：按T结束程序
+                elif key == b't' or key == b'T':
+                    sys.exit(0)
+
+    def check_game_over(self,player_name_tuple, player_num_flag):
+        # 游戏结束判断
+        if player_num_flag == 1:
+            if self.bird1.death:
+                self.game_running_flag = False
+        elif player_num_flag == 2:
+            if self.bird1.death and self.bird2.death:
+                self.game_running_flag = False
+
+        # 游戏结束
+        if not self.game_running_flag:
+            time.sleep(2)
+            print('\033[2J\033[3J\033[H', end='')
+            if player_num_flag == 2:
+                ui_frame(f'GAME OVER !Your score :{player_name_tuple[0]} : {self.bird1.score}---{player_name_tuple[1]} : {self.bird2.score}')
+            elif player_num_flag == 1:
+                ui_frame(f'GAME OVER !Your score : {player_name_tuple[0]} : {self.bird1.score}')
+            time.sleep(2)
+            print('\033[2J\033[3J\033[H', end='')
+        return
 
     def run_game(self, player_num_flag, player_name_tuple, best_record):
         # 游戏主循环
         while self.game_running_flag:
             time.sleep(0.1)  # fps=10
-            info_line = self.calculate_game_parameters(player_num_flag, player_name_tuple, best_record)
-            frames, pause_frame = self.calculate_frame_parameters(player_num_flag)
-            self.render_frame(frames, info_line)
-            self.poll_keys(player_num_flag, player_name_tuple, info_line)
+            info_line = self.calculate_game_parameters(player_num_flag, player_name_tuple, best_record)  # 计算得分
+            frames, pause_frame = self.calculate_frame_parameters(player_num_flag)  # 计算画面
+            self.render_frame(frames, info_line)  # 打印画面
+            keys = poll_keys()  # 按键轮询
+            self.react_keys(keys, player_num_flag, player_name_tuple, info_line)  # 按键反应
+            if self.pause_flag:
+                self.handle_pause_frame(player_num_flag, info_line)
+            self.check_game_over(player_name_tuple, player_num_flag)
         # 返回结果准备写入
         if player_num_flag == 1:
-            players_record = self.bird1.score,
+            players_record = (self.bird1.score,)
         elif player_num_flag == 2:
             players_record = self.bird1.score, self.bird2.score
         return players_record
 
 
 def main():
-    # 用户登录
-    player_name_tuple, user_login_flag, player_num_flag = user_login()
-    # 最佳成绩接收
-    best_record = best_score_and_time_output(player_name_tuple, player_num_flag)
-    if player_num_flag == 1:
-        player1_best_record = best_record
-    elif player_num_flag == 2:
-        player1_best_record, player2_best_record = best_record
-    # 开始游戏
-    game = Game(player_num_flag)
-    players_record = game.run_game(player_num_flag, player_name_tuple, best_record)
-    score_record(player_name_tuple, players_record, player_num_flag)
+    game_launching = True
+    while game_launching:
+        # 用户登录
+        player_name_tuple, user_login_flag, player_num_flag = user_login()
+        # 最佳成绩接收
+        best_record = best_score_and_time_output(player_name_tuple, player_num_flag)
+        if player_num_flag == 1:
+            player1_best_record = best_record
+        elif player_num_flag == 2:
+            player1_best_record, player2_best_record = best_record
+        # 开始游戏
+        while user_login_flag:
+            clear_key_buffer()
+            ui_frame('按S以开始，按ESC以退出游戏，按C切换账号')
+            key = get_key()[0]
+            if key.lower() == b's':  # 按S以开始
+                game = Game(player_num_flag)  # 创建一局游戏
+                players_record = game.run_game(player_num_flag, player_name_tuple, best_record)  # 运行游戏并返回结果
+                score_record(player_name_tuple, players_record, player_num_flag)  # 结果写入
+            elif key.lower() == b'\x1b':  # 按ESC以退出游戏
+                sys.exit(0)
+            elif key.lower() == b'c':  # 按C切换账号
+                user_login_flag = False
+                print('\033[2J\033[3J\033[H', end='')
 
 
 if __name__ == '__main__':
     main()
-#python FlappyBird.py
-# 得分系统故障
+# python FlappyBird.py
+
