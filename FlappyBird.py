@@ -404,15 +404,15 @@ def main():
     while game_launching:
         # 用户登录
         player_name_tuple, user_login_flag, player_num_flag = user_login()
-        # 最佳成绩接收
-        best_record = best_score_and_time_output(player_name_tuple, player_num_flag)
-        if player_num_flag == 1:
-            player1_best_record = best_record
-        elif player_num_flag == 2:
-            player1_best_record, player2_best_record = best_record
         # 开始游戏
         while user_login_flag:
             while 1:
+                # 最佳成绩接收
+                best_record = best_score_and_time_output(player_name_tuple, player_num_flag)
+                if player_num_flag == 1:
+                    player1_best_record = best_record
+                elif player_num_flag == 2:
+                    player1_best_record, player2_best_record = best_record
                 clear_key_buffer()  # 清空按键
                 print('\033[2J\033[3J\033[H', end='')
                 ui_frame('按S以开始，按ESC以退出游戏，按C切换账号')
