@@ -233,17 +233,7 @@ class Game:
         if player_num_flag == 2:
             if not self.bird2.death:
                 frames[self.bird2.y][self.bird2.x] = self.bird2.image
-        # 画暂停画面
-        pause_frame = copy.deepcopy(frames)
-        # H包裹
-        for j in range(HEIGHT // 4, HEIGHT - HEIGHT // 4):
-            for i in range(WIDTH // 4, WIDTH - WIDTH // 4):
-                pause_frame[j][i] = 'H'
-        # 用空气填充内部
-        for j in range(HEIGHT // 4 + 1, HEIGHT - HEIGHT // 4 - 1):
-            for i in range(WIDTH // 4 + 1, WIDTH - WIDTH // 4 - 1):
-                pause_frame[j][i] = AIR
-        return frames, pause_frame
+        return frames
 
     @staticmethod  # 标志静态函数
     def calculate_pause_frame(pause_frame_input, dot_count_input):
@@ -306,8 +296,17 @@ class Game:
         info_line_output = '\n'.join(info)
         return info_line_output
 
-    def handle_pause_frame(self, player_num_flag, info_line):
-        pause_frame = self.calculate_frame_parameters(player_num_flag)[1]
+    def handle_pause_frame(self, frames_input, info_line):
+        # 拷贝暂停画面
+        pause_frame = copy.deepcopy(frames_input)
+        # H包裹
+        for j in range(HEIGHT // 4, HEIGHT - HEIGHT // 4):
+            for i in range(WIDTH // 4, WIDTH - WIDTH // 4):
+                pause_frame[j][i] = 'H'
+        # 用空气填充内部
+        for j in range(HEIGHT // 4 + 1, HEIGHT - HEIGHT // 4 - 1):
+            for i in range(WIDTH // 4 + 1, WIDTH - WIDTH // 4 - 1):
+                pause_frame[j][i] = AIR
         # 卡入循环
         while self.pause_flag:
             for dot_num in range(1, self.dot_count + 1):
@@ -384,7 +383,7 @@ class Game:
         while self.game_running_flag:
             time.sleep(0.1)  # fps=10
             info_line = self.calculate_game_parameters(player_num_flag, player_name_tuple, best_record)  # 计算得分
-            frames, pause_frame = self.calculate_frame_parameters(player_num_flag)  # 计算画面
+            frames = self.calculate_frame_parameters(player_num_flag)  # 计算画面
             self.render_frame(frames, info_line)  # 打印画面
             keys = poll_keys()  # 按键轮询
             self.react_keys(keys, player_num_flag, player_name_tuple, info_line)  # 按键反应
@@ -430,4 +429,5 @@ def main():
 if __name__ == '__main__':
     main()
 # python FlappyBird.py
-# 游戏结束后，不会弹出重开界面
+# 暂停循环每次都会重新计算 calculate_frame_parameters 并 deepcopy 出暂停帧，哪怕画面根本没变。
+# 完全可以进入暂停时缓存一个静态的暂停帧，然后一直复用。
