@@ -96,7 +96,6 @@ def get_best_scores(player_name_tuple, player_mode):
         return (player1_best_record,)
     elif player_mode == 2:
         return player1_best_record, player2_best_record
-    return None
 
 
 def save_record(player_name_tuple, players_record, player_mode):
@@ -351,9 +350,6 @@ class Game:
                     elif key == b'c' or key == b'C':
                         self.pause_flag = False
                         break
-                    # 测试
-                    elif key == b't' or key == b'T':
-                        sys.exit(0)
 
     def react_keys(self, keys, player_mode, player_name_tuple, info_line):
         # 逐一操作按键
@@ -378,9 +374,6 @@ class Game:
                 elif key == b'\x1b':
                     self.game_running_flag = False
                     break
-                # 测试：按T结束程序
-                elif key == b't' or key == b'T':
-                    sys.exit(0)
 
     def check_game_over(self, player_name_tuple, player_mode):
         # 游戏结束判断
