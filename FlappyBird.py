@@ -44,21 +44,21 @@ def user_login():
     while 1:
         key = msvcrt.getch()
         if key == b'1':
-            player_num_flag = 1
+            player_num_flag_output = 1
             break
         elif key == b'2':
-            player_num_flag = 2
+            player_num_flag_output = 2
             break
     print('\033[2J\033[3J\033[H', end='')
-    if player_num_flag == 2:
+    if player_num_flag_output == 2:
         player1_name = input('玩家1昵称：')
         player2_name = input('玩家2昵称：')
-        player_name_tuple = (player1_name, player2_name)
-    elif player_num_flag == 1:
+        player_name_tuple_output = (player1_name, player2_name)
+    elif player_num_flag_output == 1:
         player1_name = input('玩家昵称：')
-        player_name_tuple = (player1_name,)
-    user_login_flag = True
-    return player_name_tuple, user_login_flag, player_num_flag
+        player_name_tuple_output = (player1_name,)
+    user_login_flag_output = True
+    return player_name_tuple_output, user_login_flag_output, player_num_flag_output
 
 
 # 取出最佳成绩
@@ -312,9 +312,11 @@ class Game:
         while self.pause_flag:
             for dot_num in range(1, self.dot_count + 1):
                 time.sleep(1)
-                # test(dot_num)
                 self.calculate_pause_frame(pause_frame, dot_num)
                 self.render_frame(pause_frame, info_line)
+                if dot_num == 5:  # 重置00000
+                    for dot in range(dot_num):
+                        pause_frame[HEIGHT // 2 + 1][WIDTH // 2 - dot_num // 2 + dot] = AIR
                 if msvcrt.kbhit():
                     key = get_key()[0]
                     if key == b'\x1b':
@@ -411,8 +413,8 @@ def main():
         # 开始游戏
         while user_login_flag:
             clear_key_buffer()
-            ui_frame('按S以开始，按ESC以退出游戏，按C切换账号')
             while 1:
+                ui_frame('按S以开始，按ESC以退出游戏，按C切换账号')
                 key = get_key()[0]
                 if key.lower() == b's':  # 按S以开始
                     game = Game(player_num_flag)  # 创建一局游戏
@@ -428,4 +430,4 @@ def main():
 if __name__ == '__main__':
     main()
 # python FlappyBird.py
-
+# 游戏结束后，不会弹出重开界面
