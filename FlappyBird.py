@@ -1,10 +1,9 @@
 # 常量
-WIDTH = 96
+WIDTH = 150
 WIDTH0 = WIDTH // 3
-HEIGHT = 15
+HEIGHT = 30
 AIR = ' '
 PIPE_IMAGE = '#'
-
 
 # 导入模块
 import time
@@ -14,23 +13,30 @@ import sys
 import copy
 import datetime
 import json
+import ctypes
 
 
-# 测试函数
-def test(*args, **kwargs):
-    print(args, kwargs, 'test')
+def disable_ime():
+    # 禁用输入法（避免中文输入干扰）
+    try:
+        # 1. 获取当前控制台窗口的句柄 (HWND)
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
 
-
+        # 2. 如果成功获取到了句柄，就用来禁用该窗口的输入法
+        if hwnd:
+            ctypes.windll.imm32.ImmDisableIME(hwnd)
+    except Exception:
+        pass
 # UI界面打印
-def ui_frame(tip_input):
+def render_ui_frame(tip):
     blank_line = ' ' * WIDTH  # 空白行
     ui_frame_lines = [blank_line for j in range(HEIGHT)]  # 空白页
     # 分割线
     ui_frame_lines[0] = '-' * WIDTH
     ui_frame_lines[HEIGHT - 1] = '-' * WIDTH
     # 中间提示
-    ui_frame_lines[HEIGHT // 2] = blank_line[:WIDTH // 2 - len(tip_input) // 2] + \
-                                  tip_input + blank_line[WIDTH // 2 - len(tip_input) // 2 + len(tip_input):]
+    ui_frame_lines[HEIGHT // 2] = blank_line[:WIDTH // 2 - len(tip) // 2] + \
+                                  tip + blank_line[WIDTH // 2 - len(tip) // 2 + len(tip):]
     # 拼接字符串
     ui_frame = '\n'.join(ui_frame_lines)
     # 打印UI页面
@@ -40,38 +46,38 @@ def ui_frame(tip_input):
 # 用户登录
 def user_login():
     # 等待用户按下1或2
-    ui_frame('按1选择单人模式，按2选择双人模式')
+    render_ui_frame('按1选择单人模式，按2选择双人模式')
     while 1:
         key = msvcrt.getch()
         if key == b'1':
-            player_num_flag_output = 1
+            player_mode = 1
             break
         elif key == b'2':
-            player_num_flag_output = 2
+            player_mode = 2
             break
     print('\033[2J\033[3J\033[H', end='')
-    if player_num_flag_output == 2:
+    if player_mode == 2:
         player1_name = input('玩家1昵称：')
         player2_name = input('玩家2昵称：')
-        player_name_tuple_output = (player1_name, player2_name)
-    elif player_num_flag_output == 1:
+        player_name_tuple = (player1_name, player2_name)
+    elif player_mode == 1:
         player1_name = input('玩家昵称：')
-        player_name_tuple_output = (player1_name,)
-    user_login_flag_output = True
-    return player_name_tuple_output, user_login_flag_output, player_num_flag_output
+        player_name_tuple = (player1_name,)
+    user_login_flag = True
+    return player_name_tuple, user_login_flag, player_mode
 
 
 # 取出最佳成绩
-def best_score_and_time_output(player_name_tuple, player_num_flag):
+def get_best_scores(player_name_tuple, player_mode):
     try:
         with open('FlappyBirdRecord.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
             # 根据模式读取对应玩家数据
-            if player_num_flag == 1:
+            if player_mode == 1:
                 # 单玩家模式：只读玩家1
                 records = data.get(player_name_tuple[0], [(0, '???')])
                 player1_best_record = max(records, key=lambda x: x[0])
-            elif player_num_flag == 2:
+            elif player_mode == 2:
                 # 双玩家模式：同时读取两人
                 records1 = data.get(player_name_tuple[0], [(0, '???')])
                 records2 = data.get(player_name_tuple[1], [(0, '???')])
@@ -83,22 +89,22 @@ def best_score_and_time_output(player_name_tuple, player_num_flag):
     except (FileNotFoundError, json.JSONDecodeError):
         # 文件不存在或格式错误，保持默认值
         player1_best_record = (0, '???')
-        player2_best_record = (0, '???') if player_num_flag == 2 else None
+        player2_best_record = (0, '???') if player_mode == 2 else None
 
     # 根据模式返回对应结果
-    if player_num_flag == 1:
+    if player_mode == 1:
         return (player1_best_record,)
-    elif player_num_flag == 2:
+    elif player_mode == 2:
         return player1_best_record, player2_best_record
     return None
 
 
-def score_record(player_name_tuple, players_record, player_num_flag):
+def save_record(player_name_tuple, players_record, player_mode):
     # 新数据合并至旧数据
     play_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    if player_num_flag == 1:
+    if player_mode == 1:
         player1_score = players_record[0]
-    elif player_num_flag == 2:
+    elif player_mode == 2:
         player1_score, player2_score = players_record
 
     try:  # 防止文件不存在
@@ -111,15 +117,15 @@ def score_record(player_name_tuple, players_record, player_num_flag):
             data_temp[player_name_tuple[0]].append((player1_score, play_time))
         except KeyError:
             data_temp[player_name_tuple[0]] = [(player1_score, play_time)]
-        if player_num_flag == 2:
+        if player_mode == 2:
             try:
                 data_temp[player_name_tuple[1]].append((player2_score, play_time))
             except KeyError:
                 data_temp[player_name_tuple[1]] = [(player2_score, play_time)]
     except FileNotFoundError:
-        if player_num_flag == 1:
+        if player_mode == 1:
             data_temp = {player_name_tuple[0]: [(player1_score, play_time)]}
-        elif player_num_flag == 2:
+        elif player_mode == 2:
             data_temp = {player_name_tuple[0]: [(player1_score, play_time)],
                          player_name_tuple[1]: [(player2_score, play_time)]}
     # 数据写入
@@ -130,7 +136,7 @@ def score_record(player_name_tuple, players_record, player_num_flag):
 
 def get_key():  # 用于检测单个必须按键
     key = msvcrt.getch()
-    return [key]
+    return (key,)
 
 
 def poll_keys():
@@ -155,15 +161,31 @@ class Bird:
         self.score = 0
         self.x = 1
         self.death = False
+        self.v = 0
+        self.g = 0.4
+        self.da = 0.8
+
 
     def fall(self):
-        self.y += 1
+        self.v += self.g
+        self.y += int(self.v)
+
 
     def rise(self):
-        self.y -= 1
+        self.v -= self.da
+
+
+    def check_and_bounce(self):
+        if self.y <= 0:
+            self.y = 0
+            self.v *= -0.5
+
 
     def check_death_status(self, frames):
-        if frames[self.y][self.x] == PIPE_IMAGE or self.y == HEIGHT - 1 or self.y == 0:
+        if self.y >= HEIGHT - 1:
+            self.death = True
+            return
+        if frames[self.y][self.x] == PIPE_IMAGE:
             self.death = True
 
 
@@ -200,42 +222,44 @@ class CallCounter:
 
 # 每局游戏
 class Game:
-    def __init__(self, player_num_flag):
+    def __init__(self, player_mode):
         self.game_running_flag = True
         self.pause_flag = False
         self.bird1 = Bird()
-        if player_num_flag == 2:
+        if player_mode == 2:
             self.bird2 = Bird()
             self.bird2.image = '\033[94m@\033[0m'
         self.counter = CallCounter()
         self.dot_count = 5
         self.pipes_manager = PipeManager()
 
-    def calculate_frame_parameters(self, player_num_flag):
+    def calculate_frame_parameters(self, player_mode):
         # 参数生成
         frames = [[AIR] * WIDTH for _ in range(HEIGHT)]  # 生成画面
         for pipe in self.pipes_manager.pipes:
-            for d in (0, 1, -1):
-                x = pipe.x + d
+            for dx in (0, 1, -1):
+                x = pipe.x + dx
                 if 0 <= x <= WIDTH - 1:  # 保证在画面内，防止IndexError
                     for y in range(HEIGHT):
-                        if y not in (pipe.y, pipe.y + 1, pipe.y - 1):
+                        if y not in (pipe.y, pipe.y + 1, pipe.y - 1, pipe.y + 2, pipe.y - 2):
                             frames[y][x] = PIPE_IMAGE
 
         # 插入：小鸟死亡检测检测
         self.bird1.check_death_status(frames)
-        if player_num_flag == 2:
+        self.bird1.check_and_bounce()
+        if player_mode == 2:
             self.bird2.check_death_status(frames)
+            self.bird2.check_and_bounce()
         # 画小鸟
         if not self.bird1.death:
             frames[self.bird1.y][self.bird1.x] = self.bird1.image  # 画小鸟
-        if player_num_flag == 2:
+        if player_mode == 2:
             if not self.bird2.death:
                 frames[self.bird2.y][self.bird2.x] = self.bird2.image
         return frames
 
     @staticmethod  # 标志静态函数
-    def calculate_pause_frame(pause_frame_input, dot_count_input):
+    def calculate_pause_frame(pause_frame, dot_count):
         # 将信息提示 [C] Continue [ESC] Exit 转换成字符串列表
         tip_list = []
         tip_string = '[C] Continue [ESC] Exit'
@@ -244,62 +268,62 @@ class Game:
 
         # [C] Continue [ESC] Exit 加入列表frames
         for tip_list_index in range(len(tip_list)):
-            pause_frame_input[HEIGHT // 2][WIDTH // 2 - len(tip_list) // 2 + tip_list_index] = tip_list[
+            pause_frame[HEIGHT // 2][WIDTH // 2 - len(tip_list) // 2 + tip_list_index] = tip_list[
                 tip_list_index]
         # OOOOO 加入列表frames
-        for dot in range(dot_count_input):
-            pause_frame_input[HEIGHT // 2 + 1][WIDTH // 2 - dot_count_input // 2 + dot] = 'O'
-        return pause_frame_input
+        for dot in range(dot_count):
+            pause_frame[HEIGHT // 2 + 1][WIDTH // 2 - dot_count // 2 + dot] = 'O'
+        return pause_frame
 
     @staticmethod
-    def render_frame(frame_input, info_line_input):
+    def render_frame(frame, info_line):
         separate_line = '-' * WIDTH
-        lines = [separate_line, info_line_input]
-        lines.extend(''.join(row) for row in frame_input)
+        lines = [separate_line, info_line]
+        lines.extend(''.join(row) for row in frame)
         lines.append(separate_line)
         frame = '\n'.join(lines)
         print('\033[2J\033[3J\033[H', end='')
         print(frame)
 
-    def calculate_game_parameters(self, player_num_flag, player_name_tuple, best_record):
+    def calculate_game_parameters(self, player_mode, player_name_tuple, best_record):
         # 计算本次参数
         self.counter.execute()  # 计时参数+1
         self.pipes_manager.update_pipes()
         if self.counter.count % 4 == 3:
             if not self.bird1.death:
                 self.bird1.fall()
-            if player_num_flag == 2:
+            if player_mode == 2:
                 if not self.bird2.death:
                     self.bird2.fall()
         # 计数器：管道参数和小鸟分数
         if self.counter.count == WIDTH0 - 1:
             if not self.bird1.death:
                 self.bird1.score += 1
-            if player_num_flag == 2:
+            if player_mode == 2:
                 if not self.bird2.death:
                     self.bird2.score += 1
         # info
-        if player_num_flag == 1:
+        if player_mode == 1:
             player1_best_score, player1_best_score_play_time = best_record[0]
-            info = [f'{player_name_tuple[0]}当前得分{self.bird1.score}',
+            info = (f'{player_name_tuple[0]}当前得分{self.bird1.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player1_best_score}',
                     '[esc] 退出  [P] 暂停 [space] 跳跃'
-                    '小鸟图标：@ ']
-        elif player_num_flag == 2:
+                    '小鸟图标：@ ')
+        elif player_mode == 2:
             player1_best_score, player1_best_score_play_time = best_record[0]
             player2_best_score, player2_best_score_play_time = best_record[1]
-            info = [f'{player_name_tuple[0]}当前得分{self.bird1.score}',
+            info = (f'{player_name_tuple[0]}当前得分{self.bird1.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player1_best_score}',
                     f'{player_name_tuple[1]}当前得分{self.bird2.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player2_best_score}',
                     '[esc] 退出  [P] 暂停 玩家1：[space] 跳跃；玩家2 [0] 跳跃'
-                    '小鸟图标：@（玩家1：红色；玩家2：蓝色']
+                    '小鸟图标：@（玩家1：红色；玩家2：蓝色')
         info_line_output = '\n'.join(info)
         return info_line_output
 
-    def handle_pause_frame(self, frames_input, info_line):
+    def handle_pause_frame(self, frames, info_line):
         # 拷贝暂停画面
-        pause_frame = copy.deepcopy(frames_input)
+        pause_frame = copy.deepcopy(frames)
         # H包裹
         for j in range(HEIGHT // 4, HEIGHT - HEIGHT // 4):
             for i in range(WIDTH // 4, WIDTH - WIDTH // 4):
@@ -331,9 +355,9 @@ class Game:
                     elif key == b't' or key == b'T':
                         sys.exit(0)
 
-    def react_keys(self, keys_input, player_num_flag, player_name_tuple, info_line):
+    def react_keys(self, keys, player_mode, player_name_tuple, info_line):
         # 逐一操作按键
-        for key in keys_input:
+        for key in keys:
             # 游戏进程中监听
             if self.game_running_flag and not self.pause_flag:
                 # 按P暂停
@@ -358,12 +382,12 @@ class Game:
                 elif key == b't' or key == b'T':
                     sys.exit(0)
 
-    def check_game_over(self,player_name_tuple, player_num_flag):
+    def check_game_over(self, player_name_tuple, player_mode):
         # 游戏结束判断
-        if player_num_flag == 1:
+        if player_mode == 1:
             if self.bird1.death:
                 self.game_running_flag = False
-        elif player_num_flag == 2:
+        elif player_mode == 2:
             if self.bird1.death and self.bird2.death:
                 self.game_running_flag = False
 
@@ -371,56 +395,58 @@ class Game:
         if not self.game_running_flag:
             time.sleep(2)
             print('\033[2J\033[3J\033[H', end='')
-            if player_num_flag == 2:
-                ui_frame(f'GAME OVER !Your score :{player_name_tuple[0]} : {self.bird1.score}---{player_name_tuple[1]} : {self.bird2.score}')
-            elif player_num_flag == 1:
-                ui_frame(f'GAME OVER !Your score : {player_name_tuple[0]} : {self.bird1.score}')
+            if player_mode == 2:
+                render_ui_frame(
+                    f'GAME OVER !Your score :{player_name_tuple[0]} : {self.bird1.score}---{player_name_tuple[1]} : {self.bird2.score}')
+            elif player_mode == 1:
+                render_ui_frame(f'GAME OVER !Your score : {player_name_tuple[0]} : {self.bird1.score}')
             time.sleep(2)
             print('\033[2J\033[3J\033[H', end='')
         return
 
-    def run_game(self, player_num_flag, player_name_tuple, best_record):
+    def run_game(self, player_mode, player_name_tuple, best_record):
         # 游戏主循环
         while self.game_running_flag:
-            time.sleep(0.1)  # fps=10
-            info_line = self.calculate_game_parameters(player_num_flag, player_name_tuple, best_record)  # 计算得分
-            frames = self.calculate_frame_parameters(player_num_flag)  # 计算画面
+            time.sleep(0.05)  # fps=10
+            info_line = self.calculate_game_parameters(player_mode, player_name_tuple, best_record)  # 计算得分
+            frames = self.calculate_frame_parameters(player_mode)  # 计算画面
             self.render_frame(frames, info_line)  # 打印画面
             keys = poll_keys()  # 按键轮询
-            self.react_keys(keys, player_num_flag, player_name_tuple, info_line)  # 按键反应
+            self.react_keys(keys, player_mode, player_name_tuple, info_line)  # 按键反应
             if self.pause_flag:
                 self.handle_pause_frame(frames, info_line)
-            self.check_game_over(player_name_tuple, player_num_flag)
+            self.check_game_over(player_name_tuple, player_mode)
         # 返回结果准备写入
-        if player_num_flag == 1:
+        if player_mode == 1:
             players_record = (self.bird1.score,)
-        elif player_num_flag == 2:
+        elif player_mode == 2:
             players_record = self.bird1.score, self.bird2.score
         return players_record
 
 
 def main():
+    disable_ime()
     game_launching = True
     while game_launching:
         # 用户登录
-        player_name_tuple, user_login_flag, player_num_flag = user_login()
+        player_name_tuple, user_login_flag, player_mode = user_login()
         # 开始游戏
         while user_login_flag:
             while 1:
                 # 最佳成绩接收
-                best_record = best_score_and_time_output(player_name_tuple, player_num_flag)
-                if player_num_flag == 1:
+                best_record =  get_best_scores(player_name_tuple, player_mode)
+                if player_mode == 1:
                     player1_best_record = best_record
-                elif player_num_flag == 2:
+                elif player_mode == 2:
                     player1_best_record, player2_best_record = best_record
                 clear_key_buffer()  # 清空按键
                 print('\033[2J\033[3J\033[H', end='')
-                ui_frame('按S以开始，按ESC以退出游戏，按C切换账号')
+                render_ui_frame('按S以开始，按ESC以退出游戏，按C切换账号')
                 key = get_key()[0]
                 if key.lower() == b's':  # 按S以开始
-                    game = Game(player_num_flag)  # 创建一局游戏
-                    players_record = game.run_game(player_num_flag, player_name_tuple, best_record)  # 运行游戏并返回结果
-                    score_record(player_name_tuple, players_record, player_num_flag)  # 结果写入
+                    game = Game(player_mode)  # 创建一局游戏
+                    players_record = game.run_game(player_mode, player_name_tuple, best_record)  # 运行游戏并返回结果
+                    save_record(player_name_tuple, players_record, player_mode)  # 结果写入
                 elif key.lower() == b'\x1b':  # 按ESC以退出游戏
                     sys.exit(0)
                 elif key.lower() == b'c':  # 按C切换账号
@@ -431,5 +457,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-# python FlappyBird.py
-
