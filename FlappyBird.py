@@ -214,15 +214,14 @@ class Game:
     def calculate_frame_parameters(self, player_num_flag):
         # 参数生成
         frames = [[AIR] * WIDTH for _ in range(HEIGHT)]  # 生成画面
-        # 画管道
-        for j in range(len(frames)):
-            for i in range(len(frames[j])):
-                for k in range(len(self.pipes_manager.pipes)):
-                    if i == self.pipes_manager.pipes[k].x or i == self.pipes_manager.pipes[k].x - 1 or i == \
-                            self.pipes_manager.pipes[k].x + 1:
-                        if not ((j == self.pipes_manager.pipes[k].y) or (j == self.pipes_manager.pipes[k].y - 1) or (
-                                j == self.pipes_manager.pipes[k].y + 1)):
-                            frames[j][i] = PIPE_IMAGE
+        for pipe in self.pipes_manager.pipes:
+            for d in (0, 1, -1):
+                x = pipe.x + d
+                if 0 <= x <= WIDTH - 1:  # 保证在画面内，防止IndexError
+                    for y in range(HEIGHT):
+                        if y not in (pipe.y, pipe.y + 1, pipe.y - 1):
+                            frames[y][x] = PIPE_IMAGE
+
         # 插入：小鸟死亡检测检测
         self.bird1.check_death_status(frames)
         if player_num_flag == 2:
@@ -429,5 +428,4 @@ def main():
 if __name__ == '__main__':
     main()
 # python FlappyBird.py
-# 暂停循环每次都会重新计算 calculate_frame_parameters 并 deepcopy 出暂停帧，哪怕画面根本没变。
-# 完全可以进入暂停时缓存一个静态的暂停帧，然后一直复用。
+
