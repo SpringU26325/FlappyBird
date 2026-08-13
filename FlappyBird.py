@@ -206,7 +206,7 @@ class Game:
         self.bird1 = Bird()
         if player_num_flag == 2:
             self.bird2 = Bird()
-            self.bird2.image = '@'  # 测试用
+            self.bird2.image = '\033[94m@\033[0m'
         self.counter = CallCounter()
         self.dot_count = 5
         self.pipes_manager = PipeManager()
@@ -283,7 +283,8 @@ class Game:
             player1_best_score, player1_best_score_play_time = best_record[0]
             info = [f'{player_name_tuple[0]}当前得分{self.bird1.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player1_best_score}',
-                    '[esc] 退出  [P] 暂停 [space] 跳跃']
+                    '[esc] 退出  [P] 暂停 [space] 跳跃'
+                    '小鸟图标：@ ']
         elif player_num_flag == 2:
             player1_best_score, player1_best_score_play_time = best_record[0]
             player2_best_score, player2_best_score_play_time = best_record[1]
@@ -291,7 +292,8 @@ class Game:
                     f'于{player1_best_score_play_time}取得历史最高分{player1_best_score}',
                     f'{player_name_tuple[1]}当前得分{self.bird2.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player2_best_score}',
-                    '[esc] 退出  [P] 暂停 玩家1：[space] 跳跃；玩家2 [0] 跳跃']
+                    '[esc] 退出  [P] 暂停 玩家1：[space] 跳跃；玩家2 [0] 跳跃'
+                    '小鸟图标：@（玩家1：红色；玩家2：蓝色']
         info_line_output = '\n'.join(info)
         return info_line_output
 
@@ -424,6 +426,7 @@ def main():
                 elif key.lower() == b'c':  # 按C切换账号
                     user_login_flag = False
                     print('\033[2J\033[3J\033[H', end='')
+                    break
 
 
 if __name__ == '__main__':
