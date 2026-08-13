@@ -387,7 +387,7 @@ class Game:
             keys = poll_keys()  # 按键轮询
             self.react_keys(keys, player_num_flag, player_name_tuple, info_line)  # 按键反应
             if self.pause_flag:
-                self.handle_pause_frame(player_num_flag, info_line)
+                self.handle_pause_frame(frames, info_line)
             self.check_game_over(player_name_tuple, player_num_flag)
         # 返回结果准备写入
         if player_num_flag == 1:
@@ -410,8 +410,9 @@ def main():
             player1_best_record, player2_best_record = best_record
         # 开始游戏
         while user_login_flag:
-            clear_key_buffer()
             while 1:
+                clear_key_buffer()  # 清空按键
+                print('\033[2J\033[3J\033[H', end='')
                 ui_frame('按S以开始，按ESC以退出游戏，按C切换账号')
                 key = get_key()[0]
                 if key.lower() == b's':  # 按S以开始
