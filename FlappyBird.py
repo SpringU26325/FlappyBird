@@ -167,7 +167,7 @@ class Bird:
 
     def fall(self):
         self.v += self.g
-        self.y += int(self.v)
+        self.y += round(self.v)
 
 
     def rise(self):
@@ -177,7 +177,7 @@ class Bird:
     def check_and_bounce(self):
         if self.y <= 0:
             self.y = 0
-            self.v *= -0.5
+            self.v *= -0.8
 
 
     def check_death_status(self, frames):
@@ -243,7 +243,7 @@ class Game:
                         if y not in (pipe.y, pipe.y + 1, pipe.y - 1, pipe.y + 2, pipe.y - 2):
                             frames[y][x] = PIPE_IMAGE
 
-        # 插入：小鸟死亡检测检测
+        # 插入：小鸟死亡和反弹检测检测
         self.bird1.check_death_status(frames)
         self.bird1.check_and_bounce()
         if player_mode == 2:
