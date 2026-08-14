@@ -176,7 +176,7 @@ class Bird:
 
     def check_and_bounce(self):
         if self.y <= 0:
-            self.y = 0
+            self.y = 1
             self.v *= -0.8
 
 
