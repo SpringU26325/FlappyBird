@@ -2,7 +2,7 @@
 PIPENUM = 3
 WIDTH = PIPENUM * 50
 WIDTH0 = WIDTH // PIPENUM
-HEIGHT = 35
+HEIGHT = 33
 AIR = ' '
 PIPE_IMAGE = '#'
 
@@ -318,7 +318,7 @@ class Game:
                     f'{player_name_tuple[1]}当前得分{self.bird2.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player2_best_score}',
                     '[esc] 退出  [P] 暂停 玩家1：[space] 跳跃；玩家2 [0] 跳跃'
-                    '小鸟图标：@（玩家1：红色；玩家2：蓝色')
+                    '小鸟图标：@（玩家1：红色；玩家2：蓝色）')
         info_line_output = '\n'.join(info)
         return info_line_output
 
