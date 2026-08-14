@@ -163,14 +163,19 @@ class Bird:
         self.score = 0
         self.x = 1
         self.death = False
-        self.v = 0  # 以竖直向下为正方向
+        self.v = 0.0  # 以竖直向下为正方向
         self.g = 0.04
         self.da = -0.4
-        self.air_da = -self.v ** 2 * 0.2
+        self.air_da = -self.v ** 4 * 0.5
+        self.y_frac = 0.0  # 初始化小数累加器
 
     def fall(self):
-        self.v += self.g + self.air_da
-        self.y += round(self.v)
+        self.v += self.g + self.air_da  # 计算当前速度
+        self.y_frac += self.v  # 把速度（带小数）存入累加器
+        dy = int(self.y_frac)  # 看看累加器里有没有攒够 1 格
+        if dy != 0:  # 4. 如果攒够了：
+            self.y += dy  # 让小鸟真正移动对应行数
+            self.y_frac -= dy  # 5. 从累加器里扣掉用掉的整格
 
     def rise(self):
         self.v += self.da + self.air_da
