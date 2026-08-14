@@ -1,7 +1,8 @@
 # 常量
-WIDTH = 150
-WIDTH0 = WIDTH // 3
-HEIGHT = 30
+PIPENUM = 3
+WIDTH = PIPENUM * 50
+WIDTH0 = WIDTH // PIPENUM
+HEIGHT = 35
 AIR = ' '
 PIPE_IMAGE = '#'
 
@@ -27,6 +28,8 @@ def disable_ime():
             ctypes.windll.imm32.ImmDisableIME(hwnd)
     except Exception:
         pass
+
+
 # UI界面打印
 def render_ui_frame(tip):
     blank_line = ' ' * WIDTH  # 空白行
@@ -84,7 +87,7 @@ def get_best_scores(player_name_tuple, player_mode):
                 player1_best_record = max(records1, key=lambda x: x[0])
                 player2_best_record = max(records2, key=lambda x: x[0])
             else:
-                # 未知模式，返回默认值（或者抛出异常）
+                # 返回默认值
                 pass
     except (FileNotFoundError, json.JSONDecodeError):
         # 文件不存在或格式错误，保持默认值
@@ -160,25 +163,22 @@ class Bird:
         self.score = 0
         self.x = 1
         self.death = False
-        self.v = 0
-        self.g = 0.4
-        self.da = 0.8
-
+        self.v = 0  # 以竖直向下为正方向
+        self.g = 0.04
+        self.da = -0.4
+        self.air_da = -self.v ** 2 * 0.2
 
     def fall(self):
-        self.v += self.g
+        self.v += self.g + self.air_da
         self.y += round(self.v)
 
-
     def rise(self):
-        self.v -= self.da
-
+        self.v += self.da + self.air_da
 
     def check_and_bounce(self):
         if self.y <= 0:
             self.y = 1
-            self.v *= -0.8
-
+            self.v *= -0.6
 
     def check_death_status(self, frames):
         if self.y >= HEIGHT - 1:
@@ -194,11 +194,14 @@ class Pipe:
         self.image = '#'
         self.x = x
         self.y = y
+        self.gape_width = 7
+        self.gape_width_section = (self.gape_width - 1) // 2
 
 
 class PipeManager:
     def __init__(self):
-        self.pipes = [Pipe((WIDTH0 * k) - 1, random.randint(HEIGHT // 5, HEIGHT - HEIGHT // 5)) for k in range(4)]
+        self.pipes = [Pipe((WIDTH0 * k) - 1, random.randint(HEIGHT // 5, HEIGHT - HEIGHT // 5)) for k in
+                      range(PIPENUM + 1)]
 
     def update_pipes(self):
         for pipe in self.pipes:
@@ -224,15 +227,20 @@ class Game:
     def __init__(self, player_mode):
         self.game_running_flag = True
         self.pause_flag = False
-        self.bird1 = Bird()
+        if player_mode == 1:
+            self.bird1 = Bird()
+            self.birds = (self.bird1,)
         if player_mode == 2:
+            self.bird1 = Bird()
             self.bird2 = Bird()
             self.bird2.image = '\033[94m@\033[0m'
+            self.birds = (self.bird1, self.bird2)
         self.counter = CallCounter()
         self.dot_count = 5
         self.pipes_manager = PipeManager()
 
-    def calculate_frame_parameters(self, player_mode):
+
+    def calculate_frame_parameters(self):
         # 参数生成
         frames = [[AIR] * WIDTH for _ in range(HEIGHT)]  # 生成画面
         for pipe in self.pipes_manager.pipes:
@@ -240,21 +248,15 @@ class Game:
                 x = pipe.x + dx
                 if 0 <= x <= WIDTH - 1:  # 保证在画面内，防止IndexError
                     for y in range(HEIGHT):
-                        if y not in (pipe.y, pipe.y + 1, pipe.y - 1, pipe.y + 2, pipe.y - 2):
+                        if abs(y - pipe.y) > pipe.gape_width_section:
                             frames[y][x] = PIPE_IMAGE
-
-        # 插入：小鸟死亡和反弹检测检测
-        self.bird1.check_death_status(frames)
-        self.bird1.check_and_bounce()
-        if player_mode == 2:
-            self.bird2.check_death_status(frames)
-            self.bird2.check_and_bounce()
-        # 画小鸟
-        if not self.bird1.death:
-            frames[self.bird1.y][self.bird1.x] = self.bird1.image  # 画小鸟
-        if player_mode == 2:
-            if not self.bird2.death:
-                frames[self.bird2.y][self.bird2.x] = self.bird2.image
+        for bird in self.birds:
+            # 插入：小鸟死亡和反弹检测检测
+            bird.check_death_status(frames)
+            bird.check_and_bounce()
+            # 画小鸟
+            if not bird.death:
+                frames[bird.y][bird.x] = bird.image  # 画小鸟
         return frames
 
     @staticmethod  # 标志静态函数
@@ -287,20 +289,15 @@ class Game:
     def calculate_game_parameters(self, player_mode, player_name_tuple, best_record):
         # 计算本次参数
         self.counter.execute()  # 计时参数+1
-        self.pipes_manager.update_pipes()
-        if self.counter.count % 4 == 3:
-            if not self.bird1.death:
-                self.bird1.fall()
-            if player_mode == 2:
-                if not self.bird2.death:
-                    self.bird2.fall()
-        # 计数器：管道参数和小鸟分数
-        if self.counter.count == WIDTH0 - 1:
-            if not self.bird1.death:
-                self.bird1.score += 1
-            if player_mode == 2:
-                if not self.bird2.death:
-                    self.bird2.score += 1
+        if self.counter.count % 3 == 0:
+            self.pipes_manager.update_pipes()
+        for bird in self.birds:
+            if not bird.death:
+                bird.fall()
+            # 计数器：管道参数和小鸟分数
+            if self.counter.count == WIDTH0 - 1:
+                if not bird.death:
+                    bird.score += 1
         # info
         if player_mode == 1:
             player1_best_score, player1_best_score_play_time = best_record[0]
@@ -377,13 +374,8 @@ class Game:
 
     def check_game_over(self, player_name_tuple, player_mode):
         # 游戏结束判断
-        if player_mode == 1:
-            if self.bird1.death:
-                self.game_running_flag = False
-        elif player_mode == 2:
-            if self.bird1.death and self.bird2.death:
-                self.game_running_flag = False
-
+        if all(bird.death for bird in self.birds):
+            self.game_running_flag = False
         # 游戏结束
         if not self.game_running_flag:
             time.sleep(2)
@@ -400,9 +392,9 @@ class Game:
     def run_game(self, player_mode, player_name_tuple, best_record):
         # 游戏主循环
         while self.game_running_flag:
-            time.sleep(0.05)  # fps=10
+            time.sleep(0.025)  # fps=40
             info_line = self.calculate_game_parameters(player_mode, player_name_tuple, best_record)  # 计算得分
-            frames = self.calculate_frame_parameters(player_mode)  # 计算画面
+            frames = self.calculate_frame_parameters()  # 计算画面
             self.render_frame(frames, info_line)  # 打印画面
             keys = poll_keys()  # 按键轮询
             self.react_keys(keys, player_mode, player_name_tuple, info_line)  # 按键反应
@@ -410,10 +402,7 @@ class Game:
                 self.handle_pause_frame(frames, info_line)
             self.check_game_over(player_name_tuple, player_mode)
         # 返回结果准备写入
-        if player_mode == 1:
-            players_record = (self.bird1.score,)
-        elif player_mode == 2:
-            players_record = self.bird1.score, self.bird2.score
+        players_record = tuple(bird.score for bird in self.birds)
         return players_record
 
 
@@ -427,7 +416,7 @@ def main():
         while user_login_flag:
             while 1:
                 # 最佳成绩接收
-                best_record =  get_best_scores(player_name_tuple, player_mode)
+                best_record = get_best_scores(player_name_tuple, player_mode)
                 if player_mode == 1:
                     player1_best_record = best_record
                 elif player_mode == 2:
