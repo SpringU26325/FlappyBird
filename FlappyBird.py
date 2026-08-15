@@ -161,15 +161,16 @@ class Bird:
         self.image = '\033[31m@\033[0m'
         self.y = HEIGHT // 2
         self.score = 0
-        self.x = 1
+        self.x = WIDTH0 // 4
         self.death = False
         self.v = 0.0  # 以竖直向下为正方向
-        self.g = 0.04
-        self.da = -0.4
-        self.air_da = -self.v ** 4 * 0.5
+        self.g = 0.02
+        self.da = -0.2
+        self.air_da = 0.0  # 空气阻力
         self.y_frac = 0.0  # 初始化小数累加器
 
     def fall(self):
+        self.air_da = -self.v ** 3 * 0.1  # 空气阻力与速度的三次方成正比
         self.v += self.g + self.air_da  # 计算当前速度
         self.y_frac += self.v  # 把速度（带小数）存入累加器
         dy = int(self.y_frac)  # 看看累加器里有没有攒够 1 格
@@ -178,6 +179,7 @@ class Bird:
             self.y_frac -= dy  # 5. 从累加器里扣掉用掉的整格
 
     def rise(self):
+        self.air_da = -self.v ** 3 * 0.1  # 空气阻力
         self.v += self.da + self.air_da
 
     def check_and_bounce(self):
@@ -239,6 +241,7 @@ class Game:
             self.bird1 = Bird()
             self.bird2 = Bird()
             self.bird2.image = '\033[94m@\033[0m'
+            self.bird2.x += 3
             self.birds = (self.bird1, self.bird2)
         self.counter = CallCounter()
         self.dot_count = 5
@@ -255,12 +258,16 @@ class Game:
                     for y in range(HEIGHT):
                         if abs(y - pipe.y) > pipe.gape_width_section:
                             frames[y][x] = PIPE_IMAGE
-        for bird in self.birds:
+        for index, bird in enumerate(self.birds):
             # 插入：小鸟死亡和反弹检测检测
             bird.check_death_status(frames)
             bird.check_and_bounce()
             # 画小鸟
             if not bird.death:
+                if bird.y - 2 >= 0:
+                    frames[bird.y - 2][bird.x] = str(index + 1)  # 如果小鸟不在顶部，小鸟上面显示玩家序号
+                elif bird.y - 2 < 0:
+                    frames[bird.y + 2][bird.x] = str(index + 1)  # 如果小鸟在顶部，小鸟下面显示玩家序号
                 frames[bird.y][bird.x] = bird.image  # 画小鸟
         return frames
 
@@ -294,15 +301,14 @@ class Game:
     def calculate_game_parameters(self, player_mode, player_name_tuple, best_record):
         # 计算本次参数
         self.counter.execute()  # 计时参数+1
-        if self.counter.count % 3 == 0:
+        if self.counter.count % 3 == 0:  # 控制管道每3帧移动一次
             self.pipes_manager.update_pipes()
-        for bird in self.birds:
+        for bird in self.birds:  # 对每只小鸟进行下降操作
             if not bird.death:
                 bird.fall()
-            # 计数器：管道参数和小鸟分数
-            if self.counter.count == WIDTH0 - 1:
-                if not bird.death:
-                    bird.score += 1
+            # 小鸟分数
+            if bird.x == self.pipes_manager.pipes[0].x + 1 and not bird.death and self.counter.count % 3 == 0:
+                bird.score += 1
         # info
         if player_mode == 1:
             player1_best_score, player1_best_score_play_time = best_record[0]
@@ -316,7 +322,7 @@ class Game:
             info = (f'{player_name_tuple[0]}当前得分{self.bird1.score}',
                     f'于{player1_best_score_play_time}取得历史最高分{player1_best_score}',
                     f'{player_name_tuple[1]}当前得分{self.bird2.score}',
-                    f'于{player1_best_score_play_time}取得历史最高分{player2_best_score}',
+                    f'于{player2_best_score_play_time}取得历史最高分{player2_best_score}',
                     '[esc] 退出  [P] 暂停 玩家1：[space] 跳跃；玩家2 [0] 跳跃'
                     '小鸟图标：@（玩家1：红色；玩家2：蓝色）')
         info_line_output = '\n'.join(info)
@@ -353,7 +359,7 @@ class Game:
                         self.pause_flag = False
                         break
 
-    def react_keys(self, keys, player_mode, player_name_tuple, info_line):
+    def react_keys(self, keys):
         # 逐一操作按键
         for key in keys:
             # 游戏进程中监听
@@ -369,7 +375,7 @@ class Game:
                 elif key == b'0':
                     try:
                         self.bird2.rise()
-                    except NameError:
+                    except AttributeError:
                         pass
 
                 # 按ESC结束
@@ -402,7 +408,7 @@ class Game:
             frames = self.calculate_frame_parameters()  # 计算画面
             self.render_frame(frames, info_line)  # 打印画面
             keys = poll_keys()  # 按键轮询
-            self.react_keys(keys, player_mode, player_name_tuple, info_line)  # 按键反应
+            self.react_keys(keys)  # 按键反应
             if self.pause_flag:
                 self.handle_pause_frame(frames, info_line)
             self.check_game_over(player_name_tuple, player_mode)
