@@ -1,8 +1,8 @@
 # 常量
 PIPENUM = 3
-WIDTH = PIPENUM * 50
+WIDTH = PIPENUM * 42
 WIDTH0 = WIDTH // PIPENUM
-HEIGHT = 33
+HEIGHT = 28
 AIR = ' '
 PIPE_IMAGE = '#'
 
@@ -342,7 +342,7 @@ class Game:
         # 卡入循环
         while self.pause_flag:
             for dot_num in range(1, self.dot_count + 1):
-                time.sleep(1)
+                time.sleep(0.1)
                 self.calculate_pause_frame(pause_frame, dot_num)
                 self.render_frame(pause_frame, info_line)
                 if dot_num == 5:  # 重置00000
@@ -358,6 +358,7 @@ class Game:
                     elif key == b'c' or key == b'C':
                         self.pause_flag = False
                         break
+
 
     def react_keys(self, keys):
         # 逐一操作按键
@@ -428,10 +429,7 @@ def main():
             while 1:
                 # 最佳成绩接收
                 best_record = get_best_scores(player_name_tuple, player_mode)
-                if player_mode == 1:
-                    player1_best_record = best_record
-                elif player_mode == 2:
-                    player1_best_record, player2_best_record = best_record
+
                 clear_key_buffer()  # 清空按键
                 print('\033[2J\033[3J\033[H', end='')
                 render_ui_frame('按S以开始，按ESC以退出游戏，按C切换账号')
@@ -450,3 +448,48 @@ def main():
 
 if __name__ == '__main__':
     main()
+"""
+                         #                                                                  
+                        # #       ##                                                        
+                      ##  #      #  #                                                       
+                      ##   #    #    ##                                                     
+                           #    #    ##                                                     
+                            #  #                                                            
+                            # #                                                             
+                             #  #####                                                       
+                            ####     ####                                                   
+                         ###             ###                                                
+                        #                   ##                                              
+                       #                      #                                             
+                      #                        #                                            
+                      #           ##            #                                           
+                      #           ##            #                                           
+                      #                         #                                           
+                       #                        #                                           
+                        #                      #                                            
+                         ##                   #                #####                        
+                           ###              ##             ####     ####                    
+                              #####       ##            ###             ###                 
+                                        ##            ##                   ##               
+                                      ##             #                       ##             
+                                     #              #                          ##           
+                                     #             #          #####              ##         
+                                     #             #         ##     ##              #       
+                                     #            #        #         ##             #       
+                                    #             #       #     #      #            #       
+                                    #             #       #      #      #            #      
+                                    #              #       ##    #      #            #      
+                                    #               #        ###        #            #      
+                                    ##               #                 #             #      
+                                   # #                ###            ##             #       
+                                  #  #                   ###     ###               ##       
+                                 #    #                     #####                 #  #      
+                                #      #                                        ##    #     
+                               #        #                                     ##       #    
+                              #          ###                                ##          #   
+                             #              ###                          ###             #  
+                            #                  #####                 ####                 # 
+                           #                        #####         ###                      #
+                          ##################################################################
+                                                                                    ZCY防伪标识
+"""
